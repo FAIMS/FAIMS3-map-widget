@@ -5,6 +5,7 @@ import Feature from 'ol/Feature';
 import './App.css';
 import MapWrapper from './components/MapWrapper';
 
+
 // inspiration from https://github.com/tcallsen/react-func-openlayers
 
 function App() {
@@ -12,6 +13,9 @@ function App() {
 
   // set intial state
   const [ features, setFeatures ] = useState<Array<Feature<any>>>([])
+
+  //const zoom = 12;
+  //const center = [151.048, -33.79255];
 
   // initialization - retrieve GeoJSON features from Mock JSON API get features from mock 
   //  GeoJson API (read from flat .json file in public directory)
@@ -32,13 +36,15 @@ function App() {
         // set features into state (which will be passed into OpenLayers
         //  map component as props)
         setFeatures(parsedFeatures)
-
       })
 
   },[])
+
+
+
   return (
     <div className="App">
-      <MapWrapper features={features}/>
+      <MapWrapper features={features} />
     </div>
   );
 }
