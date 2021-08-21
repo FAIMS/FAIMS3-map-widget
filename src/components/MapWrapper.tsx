@@ -8,12 +8,13 @@ import TileLayer from 'ol/layer/Tile'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
-import {Draw, Modify, Snap} from 'ol/interaction';
+import {Draw} from 'ol/interaction';
 import XYZ from 'ol/source/XYZ' 
 import {fromLonLat} from 'ol/proj';
 
 import './MapWrapper.css'
 import { Collection, Feature } from 'ol';
+
 
 type FeaturesType = Feature<any>[] | Collection<Feature<any>> | undefined
 interface MapProps {
@@ -25,7 +26,6 @@ function MapWrapper(props: MapProps) {
     // set intial state
     const [map, setMap ] = useState<Map|undefined>()
     const [featuresLayer, setFeaturesLayer ] = useState<VectorLayer<VectorSource<any>>>()
-    const [drawnFeatures, setDrawnFeatures] = useState<string []>([])
 
     // pull refs
     const mapElement = useRef<HTMLDivElement>(null);
@@ -82,6 +82,33 @@ function MapWrapper(props: MapProps) {
         return theMap;
     }, [])
 
+    const addDrawInteraction = useCallback( (map: Map) => {
+
+        const source = new VectorSource();
+        const layer = new VectorLayer({
+            source: source,
+            style: new Style({
+                stroke: new Stroke({
+                        color: '#33ff33',
+                        width: 4,
+                    }),
+                image: new CircleStyle({
+                        radius: 7,
+                        fill: new Fill({color: '#33ff33'}),
+                    }),
+                })
+        })
+        const draw = new Draw({
+            source: source,
+            type: "Point"
+        })
+        map.addLayer(layer)
+        map.addInteraction(draw)
+        setFeaturesLayer(layer)
+
+    }, [setFeaturesLayer])
+
+
     // initialize map on first render
     useEffect( () => {
  
@@ -92,17 +119,26 @@ function MapWrapper(props: MapProps) {
             if (mapElement.current) {
                 // create map
                 const initialMap = createMap(mapElement.current, props.features)
+                addDrawInteraction(initialMap)
                 setMap(initialMap)
             }
         }
-    }, [map, createMap, props])
+    }, [map, createMap, addDrawInteraction, props])
 
-  // render component
-  return (      
+    const submitAction = (event: any) => {
+        if (featuresLayer) {
+            const features = featuresLayer.getSource().getFeatures()        
+            console.log(features)
+        }
+    }
+
+    // render component
+    return (      
     <div>
-      <div ref={mapElement} className="map-container"></div>
+        <div ref={mapElement} className="map-container"></div>
+        <button className="map-submit-button" onClick={submitAction}>Submit</button>
     </div>
-  ) 
+    ) 
 
 }
 

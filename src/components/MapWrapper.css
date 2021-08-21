@@ -3,14 +3,10 @@
     width: 100%;
 }
   
-.clicked-coord-label{
+.map-submit-button {
     position: absolute;
     right: 0;
     bottom: 0;
     background: white;
     border-radius: 5px;
-}
-
-.clicked-coord-label p {
-    margin: 10px;
 }
