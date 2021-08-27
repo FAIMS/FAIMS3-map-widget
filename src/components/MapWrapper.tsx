@@ -10,7 +10,6 @@ import VectorSource from 'ol/source/Vector'
 import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
 import {Draw} from 'ol/interaction';
 import XYZ from 'ol/source/XYZ' 
-import {fromLonLat} from 'ol/proj';
 
 import './MapWrapper.css'
 import { Collection, Feature } from 'ol';
@@ -18,7 +17,8 @@ import { Collection, Feature } from 'ol';
 
 type FeaturesType = Feature<any>[] | Collection<Feature<any>> | undefined
 interface MapProps {
-    features: any
+    features: any,
+    callbackFn: (features: FeaturesType) => void
 }
 
 function MapWrapper(props: MapProps) {
@@ -100,7 +100,7 @@ function MapWrapper(props: MapProps) {
         })
         const draw = new Draw({
             source: source,
-            type: "Point"
+            type: "Polygon"
         })
         map.addLayer(layer)
         map.addInteraction(draw)
@@ -127,14 +127,15 @@ function MapWrapper(props: MapProps) {
 
     const submitAction = (event: any) => {
         if (featuresLayer) {
-            const features = featuresLayer.getSource().getFeatures()        
-            console.log(features)
+            const features = featuresLayer.getSource().getFeatures()  
+            props.callbackFn(features)  
+            featuresLayer.getSource().clear();
         }
     }
 
     // render component
     return (      
-    <div>
+    <div className="map-input-widget">
         <div ref={mapElement} className="map-container"></div>
         <button className="map-submit-button" onClick={submitAction}>Submit</button>
     </div>

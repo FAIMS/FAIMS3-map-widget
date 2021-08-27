@@ -1,12 +1,14 @@
-.map-container{
+
+
+.map-input-widget {
     height: 100vh;
     width: 100%;
+    display: grid;
+    grid-template-rows: 1fr 100px;
 }
-  
+.map-container {
+    grid-row: 1;
+}
 .map-submit-button {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    background: white;
-    border-radius: 5px;
+    grid-row: 2;
 }
