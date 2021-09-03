@@ -6,11 +6,14 @@ import './MapFormField.css';
 import MapWrapper from './MapWrapper';
 import { toStringXY } from 'ol/coordinate';
 import {toLonLat} from 'ol/proj';
+import Button from '@material-ui/core/Button'
+import { FieldProps } from 'formik';
 
-
-// inspiration from https://github.com/tcallsen/react-func-openlayers
-
-function MapFormField() {
+function MapFormField({
+  field,
+  form, 
+  ...props
+}:FieldProps) {
 
   const [ showMap, setShowMap ] = useState(false)
   const [ features, setFeatures ] = useState<Array<Feature<any>>>([])
@@ -45,6 +48,8 @@ function MapFormField() {
   const mapCallback = (theFeatures: any) => {
     setDrawnFeatures(theFeatures)
     setShowMap(false);
+
+    form.setFieldValue(field.name, theFeatures)
   }
   
   if (showMap) {
@@ -56,7 +61,7 @@ function MapFormField() {
   } else {
     return (
     <div>
-      <button className={'map-button'} onClick={() => setShowMap(true)}>Get Map Data</button>
+      <Button variant='contained' className={'map-button'} onClick={() => setShowMap(true)}>Get Map Data</Button>
 
       {drawnFeatures.map( (df, findex) => 
         (<div><p>Feature {findex}</p><ul>

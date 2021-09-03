@@ -9,7 +9,7 @@ import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
 import {Draw} from 'ol/interaction';
-import XYZ from 'ol/source/XYZ' 
+import OSM from 'ol/source/OSM'
 
 import './MapWrapper.css'
 import { Collection, Feature } from 'ol';
@@ -61,11 +61,7 @@ function MapWrapper(props: MapProps) {
         const theMap = new Map({
             target: element,
             layers: [
-                new TileLayer({
-                source: new XYZ({
-                    url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-                    })
-                }),
+                new TileLayer({source: new OSM()}),
                 featuresLayer
             ],
             view: new View({
@@ -73,6 +69,8 @@ function MapWrapper(props: MapProps) {
             }),
             controls: []
         })
+
+        console.log("Projection: ", theMap.getView().getProjection())
 
         // fit map to feature extent (with 100px of padding)
         theMap.getView().fit(featuresLayer.getSource().getExtent(), {
