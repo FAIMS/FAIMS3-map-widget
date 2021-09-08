@@ -8,11 +8,12 @@ import TileLayer from 'ol/layer/Tile'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import {Circle as CircleStyle, Fill, Stroke, Style} from 'ol/style';
-import {Draw} from 'ol/interaction';
+import {Draw, Modify} from 'ol/interaction';
 import OSM from 'ol/source/OSM'
 
 import './MapWrapper.css'
 import { Collection, Feature } from 'ol';
+import GeoJSON from 'ol/format/GeoJSON';
 
 
 type FeaturesType = Feature<any>[] | Collection<Feature<any>> | undefined
@@ -65,7 +66,9 @@ function MapWrapper(props: MapProps) {
                 featuresLayer
             ],
             view: new View({
-                projection: 'EPSG:3857'
+                projection: 'EPSG:3857',
+                center: [0, 0],
+                zoom: 2
             }),
             controls: []
         })
@@ -100,8 +103,12 @@ function MapWrapper(props: MapProps) {
             source: source,
             type: "Polygon"
         })
+        const modify = new Modify({
+            source: source
+        })
         map.addLayer(layer)
         map.addInteraction(draw)
+        map.addInteraction(modify)
         setFeaturesLayer(layer)
 
     }, [setFeaturesLayer])
@@ -125,8 +132,10 @@ function MapWrapper(props: MapProps) {
 
     const submitAction = (event: any) => {
         if (featuresLayer) {
-            const features = featuresLayer.getSource().getFeatures()  
-            props.callbackFn(features)  
+            const features = featuresLayer.getSource().getFeatures()
+            console.log(features)
+            const gj = new GeoJSON().writeFeaturesObject(features, {dataProjection: "EPSG:3857"})
+            props.callbackFn(gj)  
             featuresLayer.getSource().clear();
         }
     }

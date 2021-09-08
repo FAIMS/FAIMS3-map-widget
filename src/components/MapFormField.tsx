@@ -4,8 +4,6 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
 import './MapFormField.css';
 import MapWrapper from './MapWrapper';
-import { toStringXY } from 'ol/coordinate';
-import {toLonLat} from 'ol/proj';
 import Button from '@material-ui/core/Button'
 import { FieldProps } from 'formik';
 
@@ -63,13 +61,7 @@ function MapFormField({
     <div>
       <Button variant='contained' className={'map-button'} onClick={() => setShowMap(true)}>Get Map Data</Button>
 
-      {drawnFeatures.map( (df, findex) => 
-        (<div><p>Feature {findex}</p><ul>
-          {df.getGeometry().getCoordinates()[0].map((p:any, index: number) => 
-            (<li key={index}>{toStringXY(toLonLat(p), 5)}</li>))}
-         </ul>
-         </div>))
-        }
+      <pre>{JSON.stringify(drawnFeatures, null, 2)}</pre>
     </div>
     )
   }
