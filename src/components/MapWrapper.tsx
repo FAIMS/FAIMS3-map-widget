@@ -12,13 +12,16 @@ import {Draw, Modify} from 'ol/interaction';
 import OSM from 'ol/source/OSM'
 
 import './MapWrapper.css'
-import { Collection, Feature } from 'ol';
-import GeoJSON from 'ol/format/GeoJSON';
+import { Feature } from 'ol';
+import { DrawEvent } from 'ol/interaction/Draw';
 
 
-type FeaturesType = Feature<any>[] | Collection<Feature<any>> | undefined
+type FeaturesType = Feature<any>[] |  undefined
 interface MapProps {
     features: any,
+    featureType: ('Point' | 'Polygon' | 'Circle' | 'LineString'),
+    zoom: number,
+    center: Array<number>,
     callbackFn: (features: FeaturesType) => void
 }
 
@@ -27,6 +30,7 @@ function MapWrapper(props: MapProps) {
     // set intial state
     const [map, setMap ] = useState<Map|undefined>()
     const [featuresLayer, setFeaturesLayer ] = useState<VectorLayer<VectorSource<any>>>()
+    const [drawInteraction, setDrawInteraction] = useState<Draw|undefined>()
 
     // pull refs
     const mapElement = useRef<HTMLDivElement>(null);
@@ -36,56 +40,32 @@ function MapWrapper(props: MapProps) {
     const mapRef = useRef<Map|undefined>()
     mapRef.current = map
 
-    const createBaseLayer = (features: FeaturesType): VectorLayer<any> =>  {
-        return new VectorLayer({
-            source: new VectorSource({
-                features: features
-            }),
-            style: new Style({
-                    fill: new Fill({color: 'rgba(255, 255, 255, 0.2)'}),
-                    stroke: new Stroke({
-                            color: '#ff3333',
-                            width: 4,
-                        }),
-                    image: new CircleStyle({
-                            radius: 7,
-                            fill: new Fill({color: '#ffcc33'}),
-                        }),
-                    })
-            })
-    };
-
-    const createMap = useCallback( (element: HTMLElement, features: FeaturesType): Map => {
-        
-        const featuresLayer = createBaseLayer(features);
+    const createMap = useCallback( (element: HTMLElement, props: MapProps): Map => {
+        //const featuresLayer = createBaseLayer(props.features);
 
         const theMap = new Map({
             target: element,
             layers: [
                 new TileLayer({source: new OSM()}),
-                featuresLayer
+                //featuresLayer
             ],
             view: new View({
                 projection: 'EPSG:3857',
-                center: [0, 0],
-                zoom: 2
+                center: props.center,
+                zoom: props.zoom
             }),
             controls: []
         })
 
-        console.log("Projection: ", theMap.getView().getProjection())
-
-        // fit map to feature extent (with 100px of padding)
-        theMap.getView().fit(featuresLayer.getSource().getExtent(), {
-            padding: [100,100,100,100]
-        })
+        theMap.getView().setCenter(props.center)
 
         return theMap;
     }, [])
 
-    const addDrawInteraction = useCallback( (map: Map) => {
+    const addDrawInteraction = useCallback( (map: Map, props: MapProps) => {
 
         const source = new VectorSource();
+
         const layer = new VectorLayer({
             source: source,
             style: new Style({
@@ -101,15 +81,30 @@ function MapWrapper(props: MapProps) {
         })
         const draw = new Draw({
             source: source,
-            type: "Polygon"
+            type: props.featureType || "Point"
         })
         const modify = new Modify({
             source: source
         })
+
+        // add features to map if we're passed any in
+        if (props.features && props.features.length > 0) {
+            source.addFeatures(props.features)
+        } 
+
+        setDrawInteraction(draw)
+
         map.addLayer(layer)
         map.addInteraction(draw)
         map.addInteraction(modify)
         setFeaturesLayer(layer)
+
+        draw.on("drawstart", (event: DrawEvent) => {
+            // clear any existing features if we start drawing again
+            // could allow up to a fixed number of features 
+            // here by counting
+            source.clear()    
+        })
 
     }, [setFeaturesLayer])
 
@@ -117,14 +112,13 @@ function MapWrapper(props: MapProps) {
     // initialize map on first render
     useEffect( () => {
  
-        // don't do this if we have already made a map or if there are no
-        // features to overlay
-        if (!map && props.features.length > 0) {
+        // don't do this if we have already made a map 
+        if (!map) {
             // create and add vector source layer containing the passed in features
             if (mapElement.current) {
                 // create map
-                const initialMap = createMap(mapElement.current, props.features)
-                addDrawInteraction(initialMap)
+                const initialMap = createMap(mapElement.current, props)
+                addDrawInteraction(initialMap, props)
                 setMap(initialMap)
             }
         }
@@ -133,10 +127,17 @@ function MapWrapper(props: MapProps) {
     const submitAction = (event: any) => {
         if (featuresLayer) {
             const features = featuresLayer.getSource().getFeatures()
-            console.log(features)
-            const gj = new GeoJSON().writeFeaturesObject(features, {dataProjection: "EPSG:3857"})
-            props.callbackFn(gj)  
+            console.log("Returning Features: ", featuresLayer.getSource().getFeatures())
+            props.callbackFn(features)  
             featuresLayer.getSource().clear();
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const removeLastPoint = (event: any) => {
+        event.preventDefault()
+        if (drawInteraction) {
+            drawInteraction.removeLastPoint();
         }
     }
 
@@ -144,7 +145,7 @@ function MapWrapper(props: MapProps) {
     return (      
     <div className="map-input-widget">
         <div ref={mapElement} className="map-container"></div>
-        <button className="map-submit-button" onClick={submitAction}>Submit</button>
+        <button type="button" className="map-submit-button" onClick={submitAction}>Submit</button>
     </div>
     ) 
 

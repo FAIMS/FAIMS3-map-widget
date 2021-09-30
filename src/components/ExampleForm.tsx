@@ -1,8 +1,6 @@
 import { Field, Form, Formik, FormikProps } from 'formik';
 import MapFormField from './MapFormField'
 import Button from '@material-ui/core/Button'
-import {Select, TextField} from 'formik-material-ui'
-import { MenuItem } from '@material-ui/core';
 import './ExampleForm.css'
 
 const ExampleForm = () => (
@@ -21,29 +19,15 @@ const ExampleForm = () => (
       {(props: FormikProps<any>) => (
         <Form>
           <Field type="email" name="email" placeholder="Email" />
-          <Field component={Select} name="color">
-            <MenuItem value="red">Red</MenuItem>
-            <MenuItem value="green">Green</MenuItem>
-            <MenuItem value="blue">Blue</MenuItem>
-          </Field>
 
-          <Field name="firstName">
-            {({
-              field, // { name, value, onChange, onBlur }
-              form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-              meta,
-            }:any) => (
-              <div>
-                <Field component={TextField} placeholder="Something" {...field} />
-                {meta.touched && meta.error && (
-                  <div className="error">{meta.error}</div>
-                )}
-              </div>
-            )}
+          <Field name="circle" featureType="Circle" component={MapFormField} />
 
-          </Field>
+          <Field name="point" featureType="Point" component={MapFormField} />
 
-          <Field name="lastName" placeholder="Doe" component={MapFormField} />
+          <Field name="polygon" featureType="Polygon" component={MapFormField} />
+
+          <Field name="linestring" featureType="LineString" component={MapFormField} />
+
           <Button variant='contained' color='primary' type="submit">Submit</Button>
         </Form>
       )}

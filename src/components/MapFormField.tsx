@@ -1,47 +1,29 @@
 
-import { useEffect, useState } from 'react';
-import GeoJSON from 'ol/format/GeoJSON';
+import { useState } from 'react';
 import Feature from 'ol/Feature';
 import './MapFormField.css';
 import MapWrapper from './MapWrapper';
 import Button from '@material-ui/core/Button'
 import { FieldProps } from 'formik';
+import GeoJSON from 'ol/format/GeoJSON';
+
+
+interface MapFieldProps extends FieldProps {
+  featureType: ('Point' | 'Polygon' | 'Circle' | 'LineString')
+}
+
 
 function MapFormField({
   field,
-  form, 
+  form,
   ...props
-}:FieldProps) {
+}:MapFieldProps) {
 
   const [ showMap, setShowMap ] = useState(false)
-  const [ features, setFeatures ] = useState<Array<Feature<any>>>([])
   const [ drawnFeatures, setDrawnFeatures ] = useState<Array<Feature<any>>>([])
 
-  //const zoom = 12;
-  //const center = [151.048, -33.79255];
-
-  // initialization - retrieve GeoJSON features from Mock JSON API get features from mock 
-  //  GeoJson API (read from flat .json file in public directory)
-  useEffect( () => {
-
-    fetch('/tracks.geojson')
-      .then(response => response.json())
-      .then( (fetchedFeatures) => {
-
-        // parse fetched geojson into OpenLayers features
-        //  use options to convert feature from EPSG:4326 to EPSG:3857
-        const wktOptions = {
-          dataProjection: 'EPSG:4326',
-          featureProjection: 'EPSG:3857'
-        }
-        const parsedFeatures = new GeoJSON().readFeatures(fetchedFeatures, wktOptions)
-
-        // set features into state (which will be passed into OpenLayers
-        //  map component as props)
-        setFeatures(parsedFeatures)
-      })
-
-  },[])
+  const zoom = 12;
+  const center = [16817368.76, -4006732] 
 
   const mapCallback = (theFeatures: any) => {
     setDrawnFeatures(theFeatures)
@@ -51,17 +33,22 @@ function MapFormField({
   }
   
   if (showMap) {
+    window.scrollTo(0, 0)
     return (
       <div>
-        <MapWrapper features={features} callbackFn={mapCallback} />
+        <MapWrapper featureType={props.featureType} features={drawnFeatures} zoom={zoom} center={center} callbackFn={mapCallback} />
       </div>
     );
   } else {
+    const gj = new GeoJSON().writeFeaturesObject(drawnFeatures, {dataProjection: "EPSG:3857"})
+
     return (
     <div>
-      <Button variant='contained' className={'map-button'} onClick={() => setShowMap(true)}>Get Map Data</Button>
+      <Button variant='contained' 
+              className={'map-button'} 
+              onClick={() => setShowMap(true)}>Get {props.featureType}</Button>
 
-      <pre>{JSON.stringify(drawnFeatures, null, 2)}</pre>
+      <pre>{JSON.stringify(gj, null, 2)}</pre>
     </div>
     )
   }
